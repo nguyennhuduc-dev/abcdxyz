@@ -1,10 +1,20 @@
+```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Ng Nh Đức Prime</title>
-    <link href="https://googleapis.com" rel="stylesheet">
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap"
+        rel="stylesheet"
+    >
+
     <style>
         * {
             margin: 0;
@@ -12,274 +22,1488 @@
             box-sizing: border-box;
         }
 
+        html,
         body {
-            background-color: #000;
-            overflow: hidden;
-            width: 100vw;
-            height: 100vh;
-            font-family: 'Share Tech Mono', monospace;
+            width: 100%;
+            height: 100%;
         }
 
-        /* Hiệu ứng màn hình CRT cổ điển */
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: "Share Tech Mono", monospace;
+            color: #00ff00;
+        }
+
+        /* =========================
+           CRT EFFECT
+        ========================= */
+
         body::after {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 999;
+            content: "";
+            position: fixed;
+            inset: 0;
+
+            background:
+                linear-gradient(
+                    rgba(18, 16, 16, 0) 50%,
+                    rgba(0, 0, 0, 0.25) 50%
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255, 0, 0, 0.06),
+                    rgba(0, 255, 0, 0.02),
+                    rgba(0, 0, 255, 0.06)
+                );
+
             background-size: 100% 4px, 6px 100%;
+
+            z-index: 999;
             pointer-events: none;
         }
 
-        canvas {
+        /* =========================
+           MATRIX CANVAS
+        ========================= */
+
+        #matrixCanvas {
+            position: fixed;
+            inset: 0;
+
+            width: 100%;
+            height: 100%;
+
             display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
+
             z-index: 1;
         }
 
+        /* =========================
+           TERMINAL
+        ========================= */
+
         .terminal-overlay {
             position: absolute;
+
             top: 50%;
             left: 50%;
+
             transform: translate(-50%, -50%);
+
             width: 90%;
             max-width: 850px;
+
             height: 500px;
-            background: rgba(0, 8, 0, 0.88);
-            border: 1px solid #0f0;
-            box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
-            z-index: 2;
+
             padding: 20px;
-            color: #0f0;
+
+            background: rgba(0, 8, 0, 0.88);
+
+            border: 1px solid #00ff00;
+
             border-radius: 4px;
+
+            box-shadow:
+                0 0 10px rgba(0, 255, 0, 0.15),
+                0 0 30px rgba(0, 255, 0, 0.2);
+
+            z-index: 2;
+
             display: flex;
             flex-direction: column;
+
+            backdrop-filter: blur(2px);
         }
+
+        /* =========================
+           HEADER
+        ========================= */
 
         .terminal-header {
             display: flex;
             justify-content: space-between;
-            border-bottom: 1px solid #0f0;
+            align-items: center;
+
+            border-bottom: 1px solid #00ff00;
+
             padding-bottom: 8px;
             margin-bottom: 15px;
+
             font-size: 13px;
             letter-spacing: 1px;
+
+            text-shadow: 0 0 5px #00ff00;
         }
+
+        #liveClock {
+            white-space: nowrap;
+        }
+
+        /* =========================
+           TERMINAL BODY
+        ========================= */
 
         .terminal-body {
             flex-grow: 1;
+
             overflow-y: auto;
+
+            padding-right: 5px;
+
             font-size: 15px;
             line-height: 1.6;
+
+            scrollbar-width: thin;
+            scrollbar-color: #00ff00 transparent;
+        }
+
+        .terminal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .terminal-body::-webkit-scrollbar-thumb {
+            background: #00ff00;
         }
 
         .log-line {
             margin-bottom: 6px;
+
             white-space: pre-wrap;
+
+            word-break: break-word;
+
+            text-shadow: 0 0 4px rgba(0, 255, 0, 0.5);
         }
 
         .highlight {
-            color: #fff;
-            text-shadow: 0 0 5px #0f0;
+            color: #ffffff;
+
+            text-shadow:
+                0 0 5px #00ff00,
+                0 0 10px #00ff00;
         }
 
         .error-text {
             color: #ff3333;
-            text-shadow: 0 0 5px #ff3333;
+
+            text-shadow:
+                0 0 5px #ff3333;
         }
 
-        /* Khu vực nhập lệnh */
-        .input-line {
-            display: none;
-            align-items: center;
-            margin-top: 10px;
+        .warning-text {
+            color: #ffff00;
+
+            text-shadow:
+                0 0 5px #ffff00;
         }
 
-        .prompt {
-            color: #0f0;
-            margin-right: 10px;
-            font-weight: bold;
+        .cyan-text {
+            color: #00ffff;
+
+            text-shadow:
+                0 0 5px #00ffff;
         }
 
-        #cmdInput {
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 16px;
-            outline: none;
-            flex-grow: 1;
-            text-shadow: 0 0 5px #0f0;
-        }
+        /* =========================
+           SUCCESS BOX
+        ========================= */
 
         .success-box {
-            border: 2px dashed #0f0;
+            border: 2px dashed #00ff00;
+
             padding: 10px;
+
             text-align: center;
+
             font-size: 20px;
+
             margin: 15px 0;
+
             font-weight: bold;
-            animation: blink 1.5s infinite;
+
             background: rgba(0, 30, 0, 0.4);
+
+            animation: blink 1.5s infinite;
+
             display: none;
+
+            text-shadow:
+                0 0 5px #00ff00,
+                0 0 10px #00ff00;
         }
 
         @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
-        .terminal-body::-webkit-scrollbar { width: 6px; }
-        .terminal-body::-webkit-scrollbar-thumb { background: #0f0; }
+        /* =========================
+           INPUT
+        ========================= */
+
+        .input-line {
+            display: none;
+
+            align-items: center;
+
+            margin-top: 10px;
+
+            border-top: 1px solid rgba(0, 255, 0, 0.2);
+
+            padding-top: 8px;
+        }
+
+        .prompt {
+            color: #00ff00;
+
+            margin-right: 10px;
+
+            font-weight: bold;
+
+            white-space: nowrap;
+        }
+
+        #cmdInput {
+            width: 100%;
+
+            background: transparent;
+
+            border: none;
+            outline: none;
+
+            color: #ffffff;
+
+            font-family: "Share Tech Mono", monospace;
+
+            font-size: 16px;
+
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        /* =========================
+           CURSOR
+        ========================= */
+
+        #cmdInput {
+            caret-color: #00ff00;
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 600px) {
+            .terminal-overlay {
+                width: 94%;
+                height: 80vh;
+
+                padding: 14px;
+            }
+
+            .terminal-header {
+                font-size: 10px;
+                gap: 10px;
+            }
+
+            .terminal-body {
+                font-size: 13px;
+            }
+
+            .success-box {
+                font-size: 15px;
+            }
+
+            .prompt {
+                font-size: 13px;
+                margin-right: 5px;
+            }
+
+            #cmdInput {
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
+
 <body>
 
+    <!-- MATRIX -->
     <canvas id="matrixCanvas"></canvas>
 
-    <div class="terminal-overlay" onclick="document.getElementById('cmdInput').focus()">
+    <!-- TERMINAL -->
+    <div
+        class="terminal-overlay"
+        id="terminalOverlay"
+    >
+
+        <!-- HEADER -->
         <div class="terminal-header">
-            <div>[SYS_STATUS: ACTIVE] // CPU_LOAD: 84% // RAM_FREE: 12%</div>
-            <div id="liveClock">00:00:00</div>
+            <div>
+                [SYS_STATUS: ACTIVE]
+                //
+                CPU_LOAD: 84%
+                //
+                RAM_FREE: 12%
+            </div>
+
+            <div id="liveClock">
+                00:00:00
+            </div>
         </div>
-        <div class="terminal-body" id="terminalBody">
-            <!-- Log tự động sẽ chạy ở đây -->
+
+        <!-- OUTPUT -->
+        <div
+            class="terminal-body"
+            id="terminalBody"
+        ></div>
+
+        <!-- SUCCESS -->
+        <div
+            class="success-box"
+            id="successBox"
+        >
+            &gt; DECRYPTION COMPLETE - CORE UNLOCKED &lt;
         </div>
-        <div class="success-box" id="successBox">> DECRYPTION COMPLETE - CORE UNLOCKED <</div>
-        
-        <!-- Khung nhập lệnh tương tác thực tế -->
-        <div class="input-line" id="inputContainer">
-            <span class="prompt">root@override:~#</span>
-            <input type="text" id="cmdInput" autofocus autocomplete="off" spellcheck="false">
+
+        <!-- COMMAND INPUT -->
+        <div
+            class="input-line"
+            id="inputContainer"
+        >
+            <span class="prompt">
+                root@override:~#
+            </span>
+
+            <input
+                type="text"
+                id="cmdInput"
+                autofocus
+                autocomplete="off"
+                spellcheck="false"
+            >
         </div>
+
     </div>
 
     <script>
-        // --- ĐỒ HỌA MA TRẬN NỀN ---
-        const canvas = document.getElementById('matrixCanvas');
-        const ctx = canvas.getContext('2d');
-        let matrixColor = '#0F0'; 
 
-        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        /* =========================================================
+           MATRIX BACKGROUND
+        ========================================================= */
+
+        const canvas =
+            document.getElementById("matrixCanvas");
+
+        const ctx =
+            canvas.getContext("2d");
+
+        let matrixColor = "#00ff00";
+
+        function resizeCanvas() {
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+        }
+
         resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+
+        window.addEventListener(
+            "resize",
+            resizeCanvas
+        );
+
 
         const alphabet = "01";
+
         const fontSize = 16;
-        let columns = Math.floor(canvas.width / fontSize);
+
+        let columns = 0;
+
         let rainDrops = [];
 
+
         function initRainDrops() {
-            columns = Math.floor(canvas.width / fontSize);
+
+            columns =
+                Math.floor(
+                    canvas.width / fontSize
+                );
+
             rainDrops = [];
-            for (let x = 0; x < columns; x++) { rainDrops[x] = Math.random() * -100; }
+
+            for (
+                let x = 0;
+                x < columns;
+                x++
+            ) {
+
+                rainDrops[x] =
+                    Math.random() * -100;
+
+            }
+
         }
+
         initRainDrops();
-        window.addEventListener('resize', initRainDrops);
+
+        window.addEventListener(
+            "resize",
+            initRainDrops
+        );
+
 
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.font = fontSize + 'px monospace';
 
-            for (let i = 0; i < rainDrops.length; i++) {
-                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
-                const x = i * fontSize;
-                const y = rainDrops[i] * fontSize;
+            ctx.fillStyle =
+                "rgba(0, 0, 0, 0.06)";
 
-                ctx.fillStyle = Math.random() > 0.98 ? '#fff' : matrixColor;
-                ctx.fillText(text, x, y);
+            ctx.fillRect(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
 
-                if (y > canvas.height && Math.random() > 0.975) { rainDrops[i] = 0; }
+            ctx.font =
+                fontSize + "px monospace";
+
+
+            for (
+                let i = 0;
+                i < rainDrops.length;
+                i++
+            ) {
+
+                const text =
+                    alphabet.charAt(
+                        Math.floor(
+                            Math.random() *
+                            alphabet.length
+                        )
+                    );
+
+                const x =
+                    i * fontSize;
+
+                const y =
+                    rainDrops[i] *
+                    fontSize;
+
+
+                ctx.fillStyle =
+                    Math.random() > 0.98
+                        ? "#ffffff"
+                        : matrixColor;
+
+
+                ctx.fillText(
+                    text,
+                    x,
+                    y
+                );
+
+
+                if (
+                    y > canvas.height &&
+                    Math.random() > 0.975
+                ) {
+
+                    rainDrops[i] = 0;
+
+                }
+
                 rainDrops[i]++;
+
             }
+
         }
-        setInterval(drawMatrix, 35);
 
-        // Đồng hồ thời gian thực ở Header
-        setInterval(() => {
-            document.getElementById('liveClock').innerText = new Date().toLocaleTimeString();
-        }, 1000);
 
-        // --- HỆ THỐNG CHẠY CHỮ TỰ ĐỘNG BAN ĐẦU ---
-        const terminalBody = document.getElementById('terminalBody');
-        const successBox = document.getElementById('successBox');
-        const inputContainer = document.getElementById('inputContainer');
-        const cmdInput = document.getElementById('cmdInput');
+        setInterval(
+            drawMatrix,
+            35
+        );
+
+
+        /* =========================================================
+           CLOCK
+        ========================================================= */
+
+        const liveClock =
+            document.getElementById(
+                "liveClock"
+            );
+
+
+        function updateClock() {
+
+            liveClock.textContent =
+                new Date().toLocaleTimeString(
+                    "vi-VN"
+                );
+
+        }
+
+        updateClock();
+
+        setInterval(
+            updateClock,
+            1000
+        );
+
+
+        /* =========================================================
+           TERMINAL ELEMENTS
+        ========================================================= */
+
+        const terminalBody =
+            document.getElementById(
+                "terminalBody"
+            );
+
+        const successBox =
+            document.getElementById(
+                "successBox"
+            );
+
+        const inputContainer =
+            document.getElementById(
+                "inputContainer"
+            );
+
+        const cmdInput =
+            document.getElementById(
+                "cmdInput"
+            );
+
+
+        /* =========================================================
+           SAFE OUTPUT
+        ========================================================= */
+
+        function createOutputLine(
+            text,
+            type = "normal"
+        ) {
+
+            const line =
+                document.createElement(
+                    "div"
+                );
+
+            line.className =
+                "log-line";
+
+
+            if (type === "error") {
+
+                line.classList.add(
+                    "error-text"
+                );
+
+            }
+
+            if (type === "warning") {
+
+                line.classList.add(
+                    "warning-text"
+                );
+
+            }
+
+            if (type === "cyan") {
+
+                line.classList.add(
+                    "cyan-text"
+                );
+
+            }
+
+
+            line.textContent = text;
+
+            terminalBody.appendChild(
+                line
+            );
+
+            terminalBody.scrollTop =
+                terminalBody.scrollHeight;
+
+        }
+
+
+        /* =========================================================
+           AUTO BOOT LOG
+        ========================================================= */
 
         const autoLogs = [
+
             "Initializing secure proxy nodes...",
+
             "Target system breached successfully.",
+
             "Injecting rootkit virus into sector 0x7FFF...",
+
             "BRUTE_FORCE_ANIMATION",
+
             "Clearing system trace logs...",
+
+            "Loading interactive command interface...",
+
             "Type 'help' to view available mainframe commands."
+
         ];
+
+
         let autoIdx = 0;
 
+
         function printAutoLog() {
-            if (autoIdx < autoLogs.length) {
-                if (autoLogs[autoIdx] === "BRUTE_FORCE_ANIMATION") {
-                    const progLine = document.createElement('div');
-                    progLine.className = 'log-line';
-                    terminalBody.appendChild(progLine);
-                    let p = 0;
-                    const itv = setInterval(() => {
-                        p += Math.floor(Math.random() * 12) + 3;
-                        if (p >= 100) {
-                            p = 100; clearInterval(itv);
-                            progLine.innerHTML = `> Cracking root hash... [<span class="highlight">${'#'.repeat(20)}</span>] 100% DONE`;
-                            autoIdx++; setTimeout(printAutoLog, 400);
-                        } else {
-                            let b = Math.floor(p/5);
-                            progLine.innerHTML = `> Cracking root hash... [${'#'.repeat(b)}${'.'.repeat(20-b)}] ${p}%`;
-                        }
-                        terminalBody.scrollTop = terminalBody.scrollHeight;
-                    }, 60);
-                } else {
-                    const line = document.createElement('div');
-                    line.className = 'log-line';
-                    line.innerHTML = `> <span class="highlight">${autoLogs[autoIdx]}</span>`;
-                    terminalBody.appendChild(line);
-                    terminalBody.scrollTop = terminalBody.scrollHeight;
-                    autoIdx++;
-                    setTimeout(printAutoLog, Math.random() * 500 + 300);
-                }
-            } else {
-                // ĐÃ SỬA LỖI: Bỏ chữ .style bị thừa gây lỗi ở đây
-                successBox.style.display = 'block';
-                inputContainer.style.display = 'flex';
+
+            if (
+                autoIdx >=
+                autoLogs.length
+            ) {
+
+                successBox.style.display =
+                    "block";
+
+                inputContainer.style.display =
+                    "flex";
+
                 cmdInput.focus();
+
+                return;
+
             }
-        }
-        setTimeout(printAutoLog, 800);
 
-        // --- HỆ THỐNG XỬ LÝ LỆNH TƯƠNG TÁC (COMMAND LINE) ---
-        cmdInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                const inputVal = this.value.trim();
-                this.value = '';
-                if (!inputVal) return;
 
-                const userLine = document.createElement('div');
-                userLine.className = 'log-line';
-                userLine.innerHTML = `<span style="color:#00ff88">root@override:~#</span> ${inputVal}`;
-                terminalBody.appendChild(userLine);
+            const current =
+                autoLogs[autoIdx];
 
-                processCommand(inputVal);
-                terminalBody.scrollTop = terminalBody.scrollHeight;
+
+            /* =========================
+               PROGRESS BAR
+            ========================= */
+
+            if (
+                current ===
+                "BRUTE_FORCE_ANIMATION"
+            ) {
+
+                const progLine =
+                    document.createElement(
+                        "div"
+                    );
+
+                progLine.className =
+                    "log-line";
+
+                terminalBody.appendChild(
+                    progLine
+                );
+
+
+                let progress = 0;
+
+
+                const interval =
+                    setInterval(() => {
+
+                        progress +=
+                            Math.floor(
+                                Math.random() * 12
+                            ) + 3;
+
+
+                        if (
+                            progress >= 100
+                        ) {
+
+                            progress = 100;
+
+                            clearInterval(
+                                interval
+                            );
+
+
+                            progLine.textContent =
+                                "> Cracking root hash... [####################] 100% DONE";
+
+
+                            autoIdx++;
+
+                            setTimeout(
+                                printAutoLog,
+                                400
+                            );
+
+                        }
+                        else {
+
+                            const blocks =
+                                Math.floor(
+                                    progress / 5
+                                );
+
+                            const empty =
+                                20 - blocks;
+
+
+                            progLine.textContent =
+                                "> Cracking root hash... [" +
+                                "#".repeat(blocks) +
+                                ".".repeat(empty) +
+                                "] " +
+                                progress +
+                                "%";
+
+                        }
+
+
+                        terminalBody.scrollTop =
+                            terminalBody.scrollHeight;
+
+                    }, 60);
+
+
+                return;
+
             }
-        });
 
-        function createOutputLine(text, isError = false) {
-            const line = document.createElement('div');
-            line.className = 'log-line';
-            if (isError) line.className += ' error-text';
-            line.innerHTML = text;
-            terminalBody.appendChild(line);
+
+            /* =========================
+               NORMAL LOG
+            ========================= */
+
+            const line =
+                document.createElement(
+                    "div"
+                );
+
+            line.className =
+                "log-line";
+
+
+            const prefix =
+                document.createElement(
+                    "span"
+                );
+
+            prefix.textContent =
+                "> ";
+
+
+            const content =
+                document.createElement(
+                    "span"
+                );
+
+            content.className =
+                "highlight";
+
+            content.textContent =
+                current;
+
+
+            line.appendChild(prefix);
+            line.appendChild(content);
+
+
+            terminalBody.appendChild(
+                line
+            );
+
+
+            terminalBody.scrollTop =
+                terminalBody.scrollHeight;
+
+
+            autoIdx++;
+
+
+            setTimeout(
+                printAutoLog,
+                Math.random() * 500 + 300
+            );
+
         }
 
-        function processCommand(cmdText) {
+
+        setTimeout(
+            printAutoLog,
+            800
+        );
+
+
+        /* =========================================================
+           COMMAND HISTORY
+        ========================================================= */
+
+        let commandHistory = [];
+
+        let historyIndex = -1;
+
+
+        /* =========================================================
+           COMMAND INPUT
+        ========================================================= */
+
+        cmdInput.addEventListener(
+            "keydown",
+            function (event) {
+
+                /* ENTER */
+
+                if (
+                    event.key === "Enter"
+                ) {
+
+                    const inputVal =
+                        this.value.trim();
+
+
+                    this.value = "";
+
+
+                    if (!inputVal) {
+
+                        return;
+
+                    }
+
+
+                    commandHistory.push(
+                        inputVal
+                    );
+
+                    historyIndex =
+                        commandHistory.length;
+
+
+                    /* USER COMMAND */
+
+                    const userLine =
+                        document.createElement(
+                            "div"
+                        );
+
+                    userLine.className =
+                        "log-line";
+
+
+                    const prompt =
+                        document.createElement(
+                            "span"
+                        );
+
+                    prompt.style.color =
+                        "#00ff88";
+
+                    prompt.textContent =
+                        "root@override:~# ";
+
+
+                    const command =
+                        document.createElement(
+                            "span"
+                        );
+
+                    command.textContent =
+                        inputVal;
+
+
+                    userLine.appendChild(
+                        prompt
+                    );
+
+                    userLine.appendChild(
+                        command
+                    );
+
+
+                    terminalBody.appendChild(
+                        userLine
+                    );
+
+
+                    processCommand(
+                        inputVal
+                    );
+
+
+                    terminalBody.scrollTop =
+                        terminalBody.scrollHeight;
+
+                }
+
+
+                /* ARROW UP */
+
+                if (
+                    event.key === "ArrowUp"
+                ) {
+
+                    if (
+                        commandHistory.length === 0
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    historyIndex =
+                        Math.max(
+                            0,
+                            historyIndex - 1
+                        );
+
+
+                    this.value =
+                        commandHistory[
+                            historyIndex
+                        ] || "";
+
+
+                    event.preventDefault();
+
+                }
+
+
+                /* ARROW DOWN */
+
+                if (
+                    event.key === "ArrowDown"
+                ) {
+
+                    if (
+                        commandHistory.length === 0
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    historyIndex =
+                        Math.min(
+                            commandHistory.length,
+                            historyIndex + 1
+                        );
+
+
+                    this.value =
+                        commandHistory[
+                            historyIndex
+                        ] || "";
+
+
+                    event.preventDefault();
+
+                }
+
+            }
+        );
+
+
+        /* =========================================================
+           COMMAND SYSTEM
+        ========================================================= */
+
+        function processCommand(
+            cmdText
+        ) {
+
+            const parts =
+                cmdText
+                    .trim()
+                    .split(/\s+/);
+
+
+            const command =
+                parts[0].toLowerCase();
+
+
+            switch (command) {
+
+
+                /* =========================
+                   HELP
+                ========================= */
+
+                case "help":
+
+                    createOutputLine(
+                        "Available commands:"
+                    );
+
+                    createOutputLine(
+                        "  help       - Show available commands"
+                    );
+
+                    createOutputLine(
+                        "  about      - About this system"
+                    );
+
+                    createOutputLine(
+                        "  whoami     - Display current user"
+                    );
+
+                    createOutputLine(
+                        "  status     - Display system status"
+                    );
+
+                    createOutputLine(
+                        "  neofetch   - Display system information"
+                    );
+
+                    createOutputLine(
+                        "  date       - Display current date/time"
+                    );
+
+                    createOutputLine(
+                        "  matrix     - Change Matrix color"
+                    );
+
+                    createOutputLine(
+                        "  clear      - Clear terminal"
+                    );
+
+                    createOutputLine(
+                        "  echo       - Print text"
+                    );
+
+                    createOutputLine(
+                        "  projects   - Show projects"
+                    );
+
+                    createOutputLine(
+                        "  contact    - Show contact information"
+                    );
+
+                    createOutputLine(
+                        "  reboot     - Restart terminal animation"
+                    );
+
+                    break;
+
+
+                /* =========================
+                   ABOUT
+                ========================= */
+
+                case "about":
+
+                    createOutputLine(
+                        "NG NH ĐỨC PRIME"
+                    );
+
+                    createOutputLine(
+                        "Interactive terminal interface."
+                    );
+
+                    createOutputLine(
+                        "Built with HTML, CSS and JavaScript."
+                    );
+
+                    createOutputLine(
+                        "System mode: ONLINE"
+                    );
+
+                    break;
+
+
+                /* =========================
+                   WHOAMI
+                ========================= */
+
+                case "whoami":
+
+                    createOutputLine(
+                        "root"
+                    );
+
+                    createOutputLine(
+                        "Access level: ADMINISTRATOR"
+                    );
+
+                    break;
+
+
+                /* =========================
+                   STATUS
+                ========================= */
+
+                case "status":
+
+                    createOutputLine(
+                        "[SYSTEM STATUS]"
+                    );
+
+                    createOutputLine(
+                        "CPU: ONLINE"
+                    );
+
+                    createOutputLine(
+                        "RAM: ONLINE"
+                    );
+
+                    createOutputLine(
+                        "NETWORK: CONNECTED"
+                    );
+
+                    createOutputLine(
+                        "MATRIX ENGINE: ACTIVE"
+                    );
+
+                    createOutputLine(
+                        "TERMINAL: READY"
+                    );
+
+                    break;
+
+
+                /* =========================
+                   NEOFETCH
+                ========================= */
+
+                case "neofetch":
+
+                    createOutputLine(
+                        "        ████████       "
+                    );
+
+                    createOutputLine(
+                        "      ██        ██     "
+                    );
+
+                    createOutputLine(
+                        "     ██   0101   ██    "
+                    );
+
+                    createOutputLine(
+                        "     ██   ROOT   ██    "
+                    );
+
+                    createOutputLine(
+                        "      ██        ██     "
+                    );
+
+                    createOutputLine(
+                        "        ████████       "
+                    );
+
+                    createOutputLine(
+                        "----------------------"
+                    );
+
+                    createOutputLine(
+                        "OS: NG NH ĐỨC PRIME"
+                    );
+
+                    createOutputLine(
+                        "Shell: Override Shell"
+                    );
+
+                    createOutputLine(
+                        "Engine: JavaScript"
+                    );
+
+                    createOutputLine(
+                        "Theme: Matrix CRT"
+                    );
+
+                    createOutputLine(
+                        "Status: ONLINE"
+                    );
+
+                    break;
+
+
+                /* =========================
+                   DATE
+                ========================= */
+
+                case "date":
+
+                    createOutputLine(
+                        new Date().toString()
+                    );
+
+                    break;
+
+
+                /* =========================
+                   CLEAR
+                ========================= */
+
+                case "clear":
+
+                    terminalBody.innerHTML = "";
+
+                    break;
+
+
+                /* =========================
+                   ECHO
+                ========================= */
+
+                case "echo":
+
+                    if (
+                        parts.length < 2
+                    ) {
+
+                        createOutputLine(
+                            "Usage: echo <text>",
+                            "warning"
+                        );
+
+                    }
+                    else {
+
+                        createOutputLine(
+                            parts
+                                .slice(1)
+                                .join(" ")
+                        );
+
+                    }
+
+                    break;
+
+
+                /* =========================
+                   PROJECTS
+                ========================= */
+
+                case "projects":
+
+                    createOutputLine(
+                        "[PROJECT DATABASE]"
+                    );
+
+                    createOutputLine(
+                        "01. Web Development"
+                    );
+
+                    createOutputLine(
+                        "02. Python Projects"
+                    );
+
+                    createOutputLine(
+                        "03. C++ Projects"
+                    );
+
+                    createOutputLine(
+                        "04. Game Development"
+                    );
+
+                    createOutputLine(
+                        "05. GitHub Projects"
+                    );
+
+                    break;
+
+
+                /* =========================
+                   CONTACT
+                ========================= */
+
+                case "contact":
+
+                    createOutputLine(
+                        "[CONTACT]"
+                    );
+
+                    createOutputLine(
+                        "GitHub: nguyennhuduc-dev"
+                    );
+
+                    createOutputLine(
+                        "Status: Available"
+                    );
+
+                    break;
+
+
+                /* =========================
+                   MATRIX
+                ========================= */
+
+                case "matrix":
+
+                    if (
+                        !parts[1]
+                    ) {
+
+                        createOutputLine(
+                            "Usage: matrix <green|red|blue|cyan|white>",
+                            "warning"
+                        );
+
+                        break;
+
+                    }
+
+
+                    const colors = {
+
+                        green: "#00ff00",
+
+                        red: "#ff3333",
+
+                        blue: "#3399ff",
+
+                        cyan: "#00ffff",
+
+                        white: "#ffffff"
+
+                    };
+
+
+                    const selectedColor =
+                        parts[1].toLowerCase();
+
+
+                    if (
+                        colors[selectedColor]
+                    ) {
+
+                        matrixColor =
+                            colors[
+                                selectedColor
+                            ];
+
+
+                        createOutputLine(
+                            "Matrix color changed to " +
+                            selectedColor,
+                            "cyan"
+                        );
+
+                    }
+                    else {
+
+                        createOutputLine(
+                            "Unknown color.",
+                            "error"
+                        );
+
+                    }
+
+                    break;
+
+
+                /* =========================
+                   REBOOT
+                ========================= */
+
+                case "reboot":
+
+                    createOutputLine(
+                        "Rebooting terminal...",
+                        "warning"
+                    );
+
+
+                    setTimeout(
+                        () => {
+
+                            terminalBody.innerHTML =
+                                "";
+
+                            successBox.style.display =
+                                "none";
+
+                            inputContainer.style.display =
+                                "none";
+
+                            autoIdx = 0;
+
+                            setTimeout(
+                                printAutoLog,
+                                500
+                            );
+
+                        },
+                        800
+                    );
+
+                    break;
+
+
+                /* =========================
+                   EXIT
+                ========================= */
+
+                case "exit":
+
+                    createOutputLine(
+                        "Session closed. Type anything to continue.",
+                        "warning"
+                    );
+
+                    break;
+
+
+                /* =========================
+                   UNKNOWN
+                ========================= */
+
+                default:
+
+                    createOutputLine(
+                        "Command not found: " +
+                        command,
+                        "error"
+                    );
+
+                    createOutputLine(
+                        "Type 'help' to view available commands.",
+                        "warning"
+                    );
+
+                    break;
+
+            }
+
+        }
+
+
+        /* =========================================================
+           CLICK TERMINAL = FOCUS INPUT
+        ========================================================= */
+
+        document
+            .getElementById("terminalOverlay")
+            .addEventListener(
+                "click",
+                function () {
+
+                    if (
+                        inputContainer.style.display !==
+                        "none"
+                    ) {
+
+                        cmdInput.focus();
+
+                    }
+
+                }
+            );
+
+
+    </script>
+
+</body>
+</html>
+```
